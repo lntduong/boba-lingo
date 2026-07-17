@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star } from 'lucide-react';
+import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff } from 'lucide-react';
 
 interface Sentence {
   id?: string;
@@ -39,6 +39,19 @@ export default function Home() {
 
   // Favorites state
   const [favorites, setFavorites] = useState<string[]>([]);
+  const [isOnline, setIsOnline] = useState(true);
+
+  useEffect(() => {
+    setIsOnline(navigator.onLine);
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   useEffect(() => {
     const savedFavs = localStorage.getItem('favorites_cache');
@@ -228,6 +241,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#F0F2F5] dark:bg-zinc-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
+      {!isOnline && (
+        <div className="bg-red-500 text-white text-center text-[13px] sm:text-sm py-1.5 font-medium shadow-sm flex items-center justify-center gap-1.5 px-2">
+          <WifiOff className="w-4 h-4 shrink-0" />
+          Bạn hiện không có kết nối mạng. Đang dùng dữ liệu ngoại tuyến.
+        </div>
+      )}
       <main className="flex-1 max-w-2xl w-full mx-auto p-3 sm:p-4 flex flex-col gap-4 pb-20 pt-4 sm:pt-6">
         
         {/* Hanzii Style Tabs */}
