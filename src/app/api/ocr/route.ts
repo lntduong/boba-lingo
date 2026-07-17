@@ -1,12 +1,4 @@
 import { NextResponse } from 'next/server';
-import vision from '@google-cloud/vision';
-
-const client = new vision.ImageAnnotatorClient({
-  credentials: {
-    client_email: process.env.GOOGLE_CLIENT_EMAIL,
-    private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-  },
-});
 
 export async function POST(req: Request) {
   try {
@@ -16,24 +8,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Image is required' }, { status: 400 });
     }
 
-    // Remove the data:image/jpeg;base64, prefix if present
-    const base64Image = image.replace(/^data:image\/\w+;base64,/, '');
+    // OCR.space requires the data URI scheme for base64
+    const base64Image = image.startsWith('data:') ? image : `data:image/jpeg;base64,${image}`;
 
-    // Call Google Cloud Vision API
-    const [result] = await client.documentTextDetection({
-      image: { content: Buffer.from(base64Image, 'base64') },
-      imageContext: {
-        languageHints: ['zh-TW', 'zh-Hant', 'zh'], // Hint for traditional Chinese
-      }
+    const form = new FormData();
+    form.append('base64Image', base64Image);
+    form.append('language', 'cht');
+    form.append('scale', 'true');
+    form.append('isOverlayRequired', 'false');
+    form.append('OCREngine', '2'); // Engine 2 is recommended for Asian texts
+
+    const response = await fetch('https://api.ocr.space/parse/image', {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.OCR_SPACE_API_KEY || 'helloworld',
+      },
+      body: form,
     });
 
-    const fullTextAnnotation = result.fullTextAnnotation;
+    const data = await response.json();
 
-    if (!fullTextAnnotation) {
-      return NextResponse.json({ text: '' });
+    if (data.IsErroredOnProcessing) {
+      return NextResponse.json({ error: data.ErrorMessage?.[0] || 'OCR failed' }, { status: 500 });
     }
 
-    return NextResponse.json({ text: fullTextAnnotation.text });
+    const text = data.ParsedResults?.[0]?.ParsedText || '';
+
+    return NextResponse.json({ text });
   } catch (error: any) {
     console.error('OCR Error:', error);
     return NextResponse.json({ error: error.message || 'Failed to process image' }, { status: 500 });
