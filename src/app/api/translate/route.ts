@@ -12,11 +12,11 @@ export async function POST(request: Request) {
 
     // Translate to English
     const resEn = await translate(text, { to: 'en' });
-    const english = resEn.text;
+    const english = (resEn as any).text;
 
     // Translate to Traditional Chinese
     const resZhTw = await translate(text, { to: 'zh-TW' });
-    const chinese = resZhTw.text;
+    const chinese = (resZhTw as any).text;
 
     // Get Pinyin
     const pinyinMarks = pinyin(chinese);
