@@ -61,11 +61,7 @@ SPREADSHEET_ID="your-google-spreadsheet-id"
 ```bash
 npm run dev
 ```
-Mở trình duyệt và truy cập: [http://localhost:3000](http://localhost:3000) (Mã PIN đăng nhập mặc định: 1712)
-
-## 📱 Hình ảnh Giao diện (Screenshots)
-
-*(Thêm hình ảnh giao diện ứng dụng tại đây)*
+Mở trình duyệt và truy cập: [http://localhost:3000](http://localhost:3000)
 
 ---
 **Phát triển bởi [lntduong](https://github.com/lntduong)** 💖
