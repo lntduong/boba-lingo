@@ -1,0 +1,21 @@
+{
+  "name": "Boba Lingo",
+  "short_name": "Boba Lingo",
+  "description": "App học Tiếng Trung & Anh đi Đài Loan",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
