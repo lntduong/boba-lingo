@@ -477,7 +477,7 @@ export default function Home() {
       : [];
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] dark:bg-zinc-950 font-sans selection:bg-blue-100 dark:selection:bg-blue-900/30">
+    <div className="min-h-screen bg-[#F0F2F5] dark:bg-zinc-950 selection:bg-blue-100 dark:selection:bg-blue-900/30">
       {!isOnline && (
         <div className="bg-red-500 text-white text-center text-[13px] sm:text-sm py-1.5 font-medium shadow-sm flex items-center justify-center gap-1.5 px-2">
           <WifiOff className="w-4 h-4 shrink-0" />
