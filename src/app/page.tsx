@@ -131,7 +131,7 @@ export default function Home() {
   };
 
   const handleVoiceInput = () => {
-    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói');
       return;
