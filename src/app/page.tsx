@@ -20,7 +20,7 @@ interface Sentence {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<'learn' | 'add' | 'review'>('learn');
+  const [tab, setTab] = useState<'learn' | 'add' | 'review' | 'scan'>('learn');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,6 +33,10 @@ export default function Home() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  
+  // Scan states
+  const [scanText, setScanText] = useState('');
+  const [scanPreview, setScanPreview] = useState<Sentence | null>(null);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
 
@@ -185,10 +189,31 @@ export default function Home() {
           }
         }
       }
-    ).then(({ data: { text } }) => {
-      if (text.trim()) {
-        setVietnamese(text.trim());
-        toast.success('Đã đọc được văn bản!');
+    ).then(async ({ data: { text } }) => {
+      const recognized = text.trim();
+      if (recognized) {
+        setScanText(recognized);
+        toast.success('Đã đọc được văn bản, đang dịch...');
+        
+        setIsTranslating(true);
+        try {
+          const res = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: recognized }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setScanPreview(data);
+          } else {
+            toast.error('Lỗi dịch: ' + data.error);
+          }
+        } catch (err) {
+          toast.error('Không thể kết nối api dịch thuật');
+        } finally {
+          setIsTranslating(false);
+        }
+
       } else {
         toast.error('Không tìm thấy chữ trong ảnh');
       }
@@ -338,6 +363,14 @@ export default function Home() {
             <Brain className="w-[18px] h-[18px]" />
             <span className="hidden sm:inline">Ôn Tập</span>
             <span className="sm:hidden">Ôn Tập</span>
+          </button>
+          <button
+            onClick={() => setTab('scan')}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all duration-200 text-[14px] sm:text-[15px] ${tab === 'scan' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+          >
+            <Camera className="w-[18px] h-[18px]" />
+            <span className="hidden sm:inline">Quét Ảnh</span>
+            <span className="sm:hidden">Quét</span>
           </button>
           <button
             onClick={() => setTab('add')}
@@ -532,45 +565,21 @@ export default function Home() {
                         setPreview(null);
                       }
                     }}
-                    placeholder="Nhập văn bản tiếng Việt hoặc chụp ảnh tiếng Trung..."
+                    placeholder="Nhập văn bản..."
                     className="w-full h-full min-h-[120px] resize-none bg-transparent border-none focus:outline-none text-[16px] text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400"
                     maxLength={800}
                   />
                 </div>
                 <div className="p-3 flex justify-between items-center text-zinc-400 text-[13px]">
-                   <div className="flex items-center gap-1">
-                     <Button 
-                       variant="ghost" 
-                       size="icon"
-                       onClick={handleVoiceInput}
-                       className={`h-9 w-9 rounded-full transition-colors ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 animate-pulse' : 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800'}`}
-                       title="Dịch bằng giọng nói"
-                     >
-                       <Mic className="w-[18px] h-[18px]" />
-                     </Button>
-                     <div className="relative">
-                       <input 
-                         type="file" 
-                         accept="image/*" 
-                         capture="environment"
-                         onChange={handleImageUpload}
-                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                         title="Chụp ảnh menu"
-                       />
-                       <Button 
-                         variant="ghost" 
-                         size="icon"
-                         className="h-9 w-9 rounded-full transition-colors text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800 pointer-events-none"
-                       >
-                         {isOcrLoading ? (
-                           <div className="relative flex items-center justify-center w-full h-full">
-                             <Loader2 className="w-[18px] h-[18px] animate-spin text-blue-500" />
-                             <span className="absolute text-[8px] font-bold text-blue-600">{ocrProgress > 0 ? `${ocrProgress}` : ''}</span>
-                           </div>
-                         ) : <Camera className="w-[18px] h-[18px]" />}
-                       </Button>
-                     </div>
-                   </div>
+                   <Button 
+                     variant="ghost" 
+                     size="icon"
+                     onClick={handleVoiceInput}
+                     className={`h-9 w-9 rounded-full transition-colors ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 animate-pulse' : 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800'}`}
+                     title="Dịch bằng giọng nói"
+                   >
+                     <Mic className="w-[18px] h-[18px]" />
+                   </Button>
                    <div className="flex items-center gap-3">
                      <span className="font-medium text-zinc-400">{vietnamese.length}/800</span>
                      <Button 
@@ -750,6 +759,64 @@ export default function Home() {
                 </div>
 
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === 'scan' && (
+          <div className="space-y-4 mt-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100 px-1">Máy Quét Menu</h1>
+            
+            <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-zinc-900 overflow-hidden">
+              <div className="p-8 flex flex-col items-center justify-center min-h-[250px] relative bg-zinc-50 dark:bg-zinc-950/50">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  capture="environment"
+                  onChange={handleImageUpload}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  title="Chụp ảnh menu"
+                />
+                
+                {isOcrLoading ? (
+                  <div className="text-center space-y-4">
+                    <div className="relative inline-flex items-center justify-center">
+                      <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
+                      <span className="absolute text-xs font-bold text-blue-600">{ocrProgress}%</span>
+                    </div>
+                    <p className="text-zinc-500 text-[15px]">Đang trích xuất chữ Tiếng Trung...</p>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/40 rounded-full flex items-center justify-center mx-auto text-blue-600">
+                      <Camera className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-zinc-800 dark:text-zinc-200">Chạm để Chụp / Chọn Ảnh</p>
+                      <p className="text-zinc-500 text-[13.5px] mt-1">Hệ thống sẽ tự đọc chữ và dịch sang Tiếng Việt</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {scanPreview && !isOcrLoading && (
+              <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-zinc-900 overflow-hidden">
+                <div className="flex items-center gap-2 p-3 border-b border-zinc-50 dark:border-zinc-800/50 bg-[#F0F2F5]/50 dark:bg-zinc-800/30">
+                  <div className="w-1.5 h-4 bg-blue-500 rounded-full"></div>
+                  <h3 className="font-semibold text-zinc-800 dark:text-zinc-200">Kết quả dịch</h3>
+                </div>
+                <div className="p-4 space-y-4">
+                  <div>
+                    <div className="text-[22px] font-medium text-zinc-800 dark:text-zinc-100 mb-1">{scanPreview.chinese}</div>
+                    <div className="text-[14px] text-zinc-500 dark:text-zinc-400">[{scanPreview.pinyin}]</div>
+                  </div>
+                  <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
+                    <div className="text-[15px] font-medium text-blue-600 dark:text-blue-400">{scanPreview.vietnamese}</div>
+                    <div className="text-[15px] text-zinc-700 dark:text-zinc-300">{scanPreview.english}</div>
+                  </div>
+                </div>
+              </Card>
             )}
           </div>
         )}
