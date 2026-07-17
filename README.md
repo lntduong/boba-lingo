@@ -22,6 +22,8 @@
 *   **📱 Trải nghiệm Ứng dụng gốc (PWA):** Cài đặt trực tiếp lên màn hình chính điện thoại (iOS/Android) mà không cần qua App Store, đem lại trải nghiệm mượt mà như app native.
 *   **📷 Dịch bằng Hình ảnh & Cắt ảnh (OCR):** Tích hợp công nghệ OCR.space API. Chụp ảnh menu/biển hiệu, khoanh vùng chọn chữ chính xác và dịch tự động (Việt - Anh) siêu tốc.
 *   **🎤 Dịch bằng Giọng nói (Voice Dictation):** Hỗ trợ nhập liệu rảnh tay thông qua nhận diện giọng nói Tiếng Việt thông minh.
+*   **🎙️ Chấm điểm Phát âm (Pronunciation):** Luyện nói tiếng Trung với tính năng chấm điểm phát âm tự động (sử dụng thuật toán Levenshtein).
+*   **⚙️ Tuỳ chỉnh Giao diện (Settings):** Hỗ trợ Dark Mode, đổi phông chữ (Serif/Mono/Sans) và phóng to/thu nhỏ cỡ chữ toàn màn hình phù hợp với mọi độ tuổi.
 *   **📴 Chế độ Ngoại tuyến (Offline Mode):** Tự động lưu trữ (cache) dữ liệu vào trình duyệt. Yên tâm tra cứu từ vựng và học thẻ ngay cả khi bạn đang trên máy bay hay dưới ga tàu điện ngầm không có mạng.
 *   **📚 Sổ tay Từ vựng (Vocabulary):** Quản lý và phân loại các mẫu câu giao tiếp theo chủ đề (Ví dụ: Sân bay, Mua sắm, Ăn uống).
 *   **🧠 Chế độ Ôn tập (Flashcards):** Luyện tập trí nhớ với bộ thẻ lật trực quan, có tính năng phát âm và xáo trộn thẻ thông minh.
