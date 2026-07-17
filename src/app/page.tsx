@@ -31,6 +31,7 @@ export default function Home() {
   const [preview, setPreview] = useState<Sentence | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isListening, setIsListening] = useState(false);
 
   // Review Mode states
   const [reviewSentences, setReviewSentences] = useState<Sentence[]>([]);
@@ -127,6 +128,40 @@ export default function Home() {
     } else {
       toast.error('Trình duyệt của bạn không hỗ trợ phát âm');
     }
+  };
+
+  const handleVoiceInput = () => {
+    const SpeechRecognition = window.SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'vi-VN';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast.info('Đang nghe...', { duration: 2000 });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setVietnamese(prev => (prev + ' ' + transcript).trim());
+    };
+
+    recognition.onerror = (event: any) => {
+      toast.error('Lỗi nhận diện giọng nói: ' + event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
   };
 
   const handleTranslate = async () => {
@@ -465,7 +500,16 @@ export default function Home() {
                     maxLength={800}
                   />
                 </div>
-                <div className="p-3 flex justify-end items-center text-zinc-400 text-[13px]">
+                <div className="p-3 flex justify-between items-center text-zinc-400 text-[13px]">
+                   <Button 
+                     variant="ghost" 
+                     size="icon"
+                     onClick={handleVoiceInput}
+                     className={`h-9 w-9 rounded-full transition-colors ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 animate-pulse' : 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800'}`}
+                     title="Dịch bằng giọng nói"
+                   >
+                     <Mic className="w-[18px] h-[18px]" />
+                   </Button>
                    <div className="flex items-center gap-3">
                      <span className="font-medium text-zinc-400">{vietnamese.length}/800</span>
                      <Button 
