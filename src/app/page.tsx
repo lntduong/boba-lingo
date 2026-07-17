@@ -49,6 +49,9 @@ export default function Home() {
   const [reviewSentences, setReviewSentences] = useState<Sentence[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [isPronouncing, setIsPronouncing] = useState(false);
+  const [pronScore, setPronScore] = useState<number | null>(null);
+  const [pronResultText, setPronResultText] = useState<string>('');
 
   // Favorites state
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -171,6 +174,76 @@ export default function Home() {
 
     recognition.onend = () => {
       setIsListening(false);
+    };
+
+    recognition.start();
+  };
+
+  const levenshtein = (a: string, b: string) => {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1,
+            Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+          );
+        }
+      }
+    }
+    return matrix[b.length][a.length];
+  };
+
+  const calculateSimilarity = (source: string, target: string) => {
+    const cleanStr = (s: string) => s.replace(/[^\p{L}\p{N}]/gu, '').toLowerCase();
+    const a = cleanStr(source);
+    const b = cleanStr(target);
+    if (a.length === 0 && b.length === 0) return 100;
+    if (a.length === 0 || b.length === 0) return 0;
+    const distance = levenshtein(a, b);
+    const maxLength = Math.max(a.length, b.length);
+    return Math.round(((maxLength - distance) / maxLength) * 100);
+  };
+
+  const handlePronounce = (targetText: string) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Trình duyệt của bạn không hỗ trợ nhận diện giọng nói');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'zh-TW';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setIsPronouncing(true);
+      setPronScore(null);
+      setPronResultText('');
+      toast.info('Đang nghe bạn đọc...', { duration: 2000 });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setPronResultText(transcript);
+      const score = calculateSimilarity(transcript, targetText);
+      setPronScore(score);
+    };
+
+    recognition.onerror = (event: any) => {
+      toast.error('Lỗi thu âm: ' + event.error);
+      setIsPronouncing(false);
+    };
+
+    recognition.onend = () => {
+      setIsPronouncing(false);
     };
 
     recognition.start();
@@ -748,18 +821,49 @@ export default function Home() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-4 animate-in fade-in zoom-in duration-300 w-full">
+                      <div className="space-y-4 animate-in fade-in zoom-in duration-300 w-full relative pb-10">
                         <div className="text-[12px] font-bold text-blue-600 dark:text-blue-400 tracking-wider mb-2">TIẾNG TRUNG</div>
-                        <div className="text-3xl font-medium text-zinc-800 dark:text-zinc-100 relative group flex items-center justify-center gap-3">
-                          {reviewSentences[currentCardIndex].chinese}
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); speak(reviewSentences[currentCardIndex].chinese, 'zh-TW'); }}
-                            className="p-2 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-800/50 text-blue-600 dark:text-blue-400 transition-colors"
-                          >
-                            <Volume2 className="w-5 h-5" />
-                          </button>
+                        <div className="text-3xl font-medium text-zinc-800 dark:text-zinc-100 relative group flex flex-col items-center justify-center gap-3">
+                          <span>{reviewSentences[currentCardIndex].chinese}</span>
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); speak(reviewSentences[currentCardIndex].chinese, 'zh-TW'); }}
+                              className="p-3 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/50 dark:hover:bg-blue-800/50 text-blue-600 dark:text-blue-400 transition-colors"
+                              title="Nghe phát âm chuẩn"
+                            >
+                              <Volume2 className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); handlePronounce(reviewSentences[currentCardIndex].chinese); }}
+                              disabled={isPronouncing}
+                              className={`p-3 rounded-full transition-colors ${
+                                isPronouncing 
+                                ? 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400 animate-pulse' 
+                                : 'bg-green-100 hover:bg-green-200 dark:bg-green-900/50 dark:hover:bg-green-800/50 text-green-600 dark:text-green-400'
+                              }`}
+                              title="Kiểm tra phát âm"
+                            >
+                              <Mic className="w-5 h-5" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-[16px] text-zinc-500 dark:text-zinc-400">
+                        
+                        {pronScore !== null && (
+                          <div className={`mt-2 p-3 rounded-xl text-sm font-medium border ${
+                            pronScore >= 80 ? 'bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400' :
+                            pronScore >= 50 ? 'bg-yellow-50 border-yellow-200 text-yellow-700 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-400' :
+                            'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
+                          }`}>
+                            <div className="text-center text-lg mb-1">
+                              Điểm: {pronScore}/100
+                            </div>
+                            <div className="text-center text-xs opacity-80 font-normal truncate px-2" title={pronResultText}>
+                              Bạn đọc: {pronResultText}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="text-[16px] text-zinc-500 dark:text-zinc-400 mt-2">
                           [{reviewSentences[currentCardIndex].pinyin}]
                         </div>
                         <div className="pt-4 mt-4 border-t border-blue-100 dark:border-zinc-800 w-full max-w-[80%] mx-auto">
@@ -783,6 +887,8 @@ export default function Home() {
                     onClick={() => {
                       setCurrentCardIndex(prev => prev > 0 ? prev - 1 : reviewSentences.length - 1);
                       setIsFlipped(false);
+                      setPronScore(null);
+                      setPronResultText('');
                     }}
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
@@ -794,6 +900,8 @@ export default function Home() {
                     onClick={() => {
                       setCurrentCardIndex(prev => (prev + 1) % reviewSentences.length);
                       setIsFlipped(false);
+                      setPronScore(null);
+                      setPronResultText('');
                     }}
                   >
                     Tiếp theo
