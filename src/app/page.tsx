@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera, X } from 'lucide-react';
+import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera, X, Settings, Moon, Sun, Type } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import ReactCrop, { type Crop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -21,7 +22,7 @@ interface Sentence {
 }
 
 export default function Home() {
-  const [tab, setTab] = useState<'learn' | 'add' | 'review' | 'scan'>('learn');
+  const [tab, setTab] = useState<'learn' | 'add' | 'review' | 'scan' | 'settings'>('learn');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,29 @@ export default function Home() {
   // Favorites state
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isOnline, setIsOnline] = useState(true);
+
+  // Settings states
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [fontFamily, setFontFamily] = useState('var(--font-sans)');
+  const [fontSize, setFontSize] = useState('16px');
+
+  useEffect(() => {
+    setMounted(true);
+    const savedFont = localStorage.getItem('app-font-family');
+    const savedSize = localStorage.getItem('app-font-size');
+    if (savedFont) setFontFamily(savedFont);
+    if (savedSize) setFontSize(savedSize);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      document.documentElement.style.fontFamily = fontFamily;
+      document.documentElement.style.fontSize = fontSize;
+      localStorage.setItem('app-font-family', fontFamily);
+      localStorage.setItem('app-font-size', fontSize);
+    }
+  }, [fontFamily, fontSize, mounted]);
 
   useEffect(() => {
     setIsOnline(navigator.onLine);
@@ -466,35 +490,38 @@ export default function Home() {
         <div className="flex bg-white dark:bg-zinc-900 p-1 rounded-2xl shadow-sm border border-zinc-100 dark:border-zinc-800">
           <button
             onClick={() => setTab('learn')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all duration-200 text-[14px] sm:text-[15px] ${tab === 'learn' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            className={`flex-1 flex items-center justify-center py-2.5 rounded-xl transition-all duration-200 ${tab === 'learn' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            title="Học Từ Vựng"
           >
-            <BookOpen className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline">Học Từ Vựng</span>
-            <span className="sm:hidden">Học</span>
+            <BookOpen className="w-6 h-6" />
           </button>
           <button
             onClick={() => setTab('review')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all duration-200 text-[14px] sm:text-[15px] ${tab === 'review' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            className={`flex-1 flex items-center justify-center py-2.5 rounded-xl transition-all duration-200 ${tab === 'review' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            title="Ôn Tập"
           >
-            <Brain className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline">Ôn Tập</span>
-            <span className="sm:hidden">Ôn Tập</span>
+            <Brain className="w-6 h-6" />
           </button>
           <button
             onClick={() => setTab('scan')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all duration-200 text-[14px] sm:text-[15px] ${tab === 'scan' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            className={`flex-1 flex items-center justify-center py-2.5 rounded-xl transition-all duration-200 ${tab === 'scan' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            title="Quét Ảnh"
           >
-            <Camera className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline">Quét Ảnh</span>
-            <span className="sm:hidden">Quét</span>
+            <Camera className="w-6 h-6" />
           </button>
           <button
             onClick={() => setTab('add')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-medium transition-all duration-200 text-[14px] sm:text-[15px] ${tab === 'add' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            className={`flex-1 flex items-center justify-center py-2.5 rounded-xl transition-all duration-200 ${tab === 'add' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            title="Thêm Mới"
           >
-            <Plus className="w-[18px] h-[18px]" />
-            <span className="hidden sm:inline">Thêm Câu Mới</span>
-            <span className="sm:hidden">Thêm</span>
+            <Plus className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => setTab('settings')}
+            className={`flex-1 flex items-center justify-center py-2.5 rounded-xl transition-all duration-200 ${tab === 'settings' ? 'bg-[#F0F4FF] dark:bg-zinc-800 text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+            title="Cài Đặt"
+          >
+            <Settings className="w-6 h-6" />
           </button>
         </div>
 
@@ -996,6 +1023,56 @@ export default function Home() {
                 </div>
               </Card>
             )}
+          </div>
+        )}
+
+        {tab === 'settings' && (
+          <div className="space-y-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100 px-1">Cài Đặt</h1>
+            <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-zinc-900 overflow-hidden">
+              <div className="p-4 space-y-6">
+                
+                {/* Theme Setting */}
+                <div className="space-y-3">
+                  <Label className="text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                    <Sun className="w-4 h-4" /> Giao diện
+                  </Label>
+                  {mounted && (
+                    <div className="flex gap-2">
+                      <Button variant={theme === 'light' ? 'default' : 'outline'} className="flex-1 rounded-xl" onClick={() => setTheme('light')}>Sáng</Button>
+                      <Button variant={theme === 'dark' ? 'default' : 'outline'} className="flex-1 rounded-xl" onClick={() => setTheme('dark')}>Tối</Button>
+                      <Button variant={theme === 'system' ? 'default' : 'outline'} className="flex-1 rounded-xl" onClick={() => setTheme('system')}>Tự động</Button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Font Size Setting */}
+                <div className="space-y-3">
+                  <Label className="text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                    <Type className="w-4 h-4" /> Kích cỡ chữ
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <Button variant={fontSize === '14px' ? 'default' : 'outline'} className="rounded-xl" onClick={() => setFontSize('14px')}>Nhỏ</Button>
+                    <Button variant={fontSize === '16px' ? 'default' : 'outline'} className="rounded-xl" onClick={() => setFontSize('16px')}>Vừa</Button>
+                    <Button variant={fontSize === '18px' ? 'default' : 'outline'} className="rounded-xl" onClick={() => setFontSize('18px')}>Lớn</Button>
+                    <Button variant={fontSize === '20px' ? 'default' : 'outline'} className="rounded-xl" onClick={() => setFontSize('20px')}>Rất lớn</Button>
+                  </div>
+                </div>
+
+                {/* Font Family Setting */}
+                <div className="space-y-3">
+                  <Label className="text-zinc-700 dark:text-zinc-300 flex items-center gap-2">
+                    <PenLine className="w-4 h-4" /> Kiểu chữ
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <Button variant={fontFamily === 'var(--font-sans)' ? 'default' : 'outline'} className="rounded-xl" onClick={() => setFontFamily('var(--font-sans)')}>Mặc định</Button>
+                    <Button variant={fontFamily === 'serif' ? 'default' : 'outline'} className="rounded-xl" style={{fontFamily: 'serif'}} onClick={() => setFontFamily('serif')}>Có chân (Serif)</Button>
+                    <Button variant={fontFamily === 'monospace' ? 'default' : 'outline'} className="rounded-xl" style={{fontFamily: 'monospace'}} onClick={() => setFontFamily('monospace')}>Code (Mono)</Button>
+                  </div>
+                </div>
+
+              </div>
+            </Card>
           </div>
         )}
 

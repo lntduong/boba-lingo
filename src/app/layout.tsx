@@ -14,6 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 import AuthProvider from "@/components/AuthProvider";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -42,10 +43,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
