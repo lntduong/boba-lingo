@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff } from 'lucide-react';
+import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera } from 'lucide-react';
+import Tesseract from 'tesseract.js';
 
 interface Sentence {
   id?: string;
@@ -32,6 +33,8 @@ export default function Home() {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [ocrProgress, setOcrProgress] = useState(0);
 
   // Review Mode states
   const [reviewSentences, setReviewSentences] = useState<Sentence[]>([]);
@@ -162,6 +165,40 @@ export default function Home() {
     };
 
     recognition.start();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsOcrLoading(true);
+    setOcrProgress(0);
+    toast.info('Đang phân tích hình ảnh...', { duration: 3000 });
+
+    Tesseract.recognize(
+      file,
+      'chi_tra',
+      { 
+        logger: m => {
+          if (m.status === 'recognizing text') {
+            setOcrProgress(Math.round(m.progress * 100));
+          }
+        }
+      }
+    ).then(({ data: { text } }) => {
+      if (text.trim()) {
+        setVietnamese(text.trim());
+        toast.success('Đã đọc được văn bản!');
+      } else {
+        toast.error('Không tìm thấy chữ trong ảnh');
+      }
+    }).catch(err => {
+      toast.error('Lỗi nhận diện ảnh: ' + err.message);
+    }).finally(() => {
+      setIsOcrLoading(false);
+      setOcrProgress(0);
+      e.target.value = ''; // reset input
+    });
   };
 
   const handleTranslate = async () => {
@@ -495,21 +532,45 @@ export default function Home() {
                         setPreview(null);
                       }
                     }}
-                    placeholder="Nhập văn bản..."
+                    placeholder="Nhập văn bản tiếng Việt hoặc chụp ảnh tiếng Trung..."
                     className="w-full h-full min-h-[120px] resize-none bg-transparent border-none focus:outline-none text-[16px] text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400"
                     maxLength={800}
                   />
                 </div>
                 <div className="p-3 flex justify-between items-center text-zinc-400 text-[13px]">
-                   <Button 
-                     variant="ghost" 
-                     size="icon"
-                     onClick={handleVoiceInput}
-                     className={`h-9 w-9 rounded-full transition-colors ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 animate-pulse' : 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800'}`}
-                     title="Dịch bằng giọng nói"
-                   >
-                     <Mic className="w-[18px] h-[18px]" />
-                   </Button>
+                   <div className="flex items-center gap-1">
+                     <Button 
+                       variant="ghost" 
+                       size="icon"
+                       onClick={handleVoiceInput}
+                       className={`h-9 w-9 rounded-full transition-colors ${isListening ? 'text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 hover:text-red-600 animate-pulse' : 'text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800'}`}
+                       title="Dịch bằng giọng nói"
+                     >
+                       <Mic className="w-[18px] h-[18px]" />
+                     </Button>
+                     <div className="relative">
+                       <input 
+                         type="file" 
+                         accept="image/*" 
+                         capture="environment"
+                         onChange={handleImageUpload}
+                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                         title="Chụp ảnh menu"
+                       />
+                       <Button 
+                         variant="ghost" 
+                         size="icon"
+                         className="h-9 w-9 rounded-full transition-colors text-zinc-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-zinc-800 pointer-events-none"
+                       >
+                         {isOcrLoading ? (
+                           <div className="relative flex items-center justify-center w-full h-full">
+                             <Loader2 className="w-[18px] h-[18px] animate-spin text-blue-500" />
+                             <span className="absolute text-[8px] font-bold text-blue-600">{ocrProgress > 0 ? `${ocrProgress}` : ''}</span>
+                           </div>
+                         ) : <Camera className="w-[18px] h-[18px]" />}
+                       </Button>
+                     </div>
+                   </div>
                    <div className="flex items-center gap-3">
                      <span className="font-medium text-zinc-400">{vietnamese.length}/800</span>
                      <Button 
@@ -536,7 +597,8 @@ export default function Home() {
                         <div className="text-[22px] font-medium text-zinc-800 dark:text-zinc-100 mb-1">{preview.chinese}</div>
                         <div className="text-[14px] text-zinc-500 dark:text-zinc-400">[{preview.pinyin}]</div>
                       </div>
-                      <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                      <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 space-y-1">
+                        <div className="text-[15px] text-zinc-700 dark:text-zinc-300 font-medium">{preview.vietnamese}</div>
                         <div className="text-[15px] text-zinc-700 dark:text-zinc-300">{preview.english}</div>
                       </div>
                     </div>

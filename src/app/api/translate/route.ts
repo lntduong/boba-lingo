@@ -10,6 +10,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Text is required' }, { status: 400 });
     }
 
+    // Translate to Vietnamese
+    const resVi = await translate(text, { to: 'vi' });
+    const vietnamese = (resVi as any).text;
+
     // Translate to English
     const resEn = await translate(text, { to: 'en' });
     const english = (resEn as any).text;
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
     const pinyinMarks = pinyin(chinese);
 
     return NextResponse.json({
-      vietnamese: text,
+      vietnamese,
       english,
       chinese,
       pinyin: pinyinMarks,
