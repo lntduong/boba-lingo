@@ -175,7 +175,7 @@ export default function Home() {
     if (!file) return;
 
     setIsOcrLoading(true);
-    toast.info('Đang nén và gửi ảnh lên hệ thống Google Vision...', { duration: 3000 });
+    toast.info('Đang nén và trích xuất ảnh...', { duration: 3000 });
 
     const compressImage = (file: File): Promise<string> => {
       return new Promise((resolve, reject) => {
@@ -815,7 +815,7 @@ export default function Home() {
                     <div className="relative inline-flex items-center justify-center">
                       <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
                     </div>
-                    <p className="text-zinc-500 text-[15px]">Đang trích xuất qua Google Vision...</p>
+                    <p className="text-zinc-500 text-[15px]">Đang trích xuất dữ liệu ảnh...</p>
                   </div>
                 ) : (
                   <div className="text-center space-y-4">
