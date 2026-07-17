@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera } from 'lucide-react';
-import Tesseract from 'tesseract.js';
 
 interface Sentence {
   id?: string;
@@ -177,53 +176,52 @@ export default function Home() {
 
     setIsOcrLoading(true);
     setOcrProgress(0);
-    toast.info('Đang phân tích hình ảnh...', { duration: 3000 });
+    toast.info('Đang gửi ảnh lên hệ thống Google Vision...', { duration: 3000 });
 
-    Tesseract.recognize(
-      file,
-      'chi_tra',
-      { 
-        logger: m => {
-          if (m.status === 'recognizing text') {
-            setOcrProgress(Math.round(m.progress * 100));
-          }
-        }
-      }
-    ).then(async ({ data: { text } }) => {
-      const recognized = text.trim();
-      if (recognized) {
-        setScanText(recognized);
-        toast.success('Đã đọc được văn bản, đang dịch...');
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      try {
+        const ocrRes = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64String }),
+        });
         
-        setIsTranslating(true);
-        try {
-          const res = await fetch('/api/translate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: recognized }),
-          });
-          const data = await res.json();
-          if (res.ok) {
-            setScanPreview(data);
+        const ocrData = await ocrRes.json();
+        if (ocrRes.ok && ocrData.text) {
+          const recognized = ocrData.text.trim();
+          if (recognized) {
+            setScanText(recognized);
+            toast.success('Đã đọc được văn bản, đang dịch...');
+            
+            setIsTranslating(true);
+            const transRes = await fetch('/api/translate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: recognized }),
+            });
+            const transData = await transRes.json();
+            if (transRes.ok) {
+              setScanPreview(transData);
+            } else {
+              toast.error('Lỗi dịch: ' + transData.error);
+            }
+            setIsTranslating(false);
           } else {
-            toast.error('Lỗi dịch: ' + data.error);
+            toast.error('Không tìm thấy chữ trong ảnh');
           }
-        } catch (err) {
-          toast.error('Không thể kết nối api dịch thuật');
-        } finally {
-          setIsTranslating(false);
+        } else {
+          toast.error('Lỗi nhận diện ảnh: ' + (ocrData.error || 'Không tìm thấy chữ'));
         }
-
-      } else {
-        toast.error('Không tìm thấy chữ trong ảnh');
+      } catch (err: any) {
+        toast.error('Lỗi gửi ảnh: ' + err.message);
+      } finally {
+        setIsOcrLoading(false);
+        e.target.value = ''; // reset input
       }
-    }).catch(err => {
-      toast.error('Lỗi nhận diện ảnh: ' + err.message);
-    }).finally(() => {
-      setIsOcrLoading(false);
-      setOcrProgress(0);
-      e.target.value = ''; // reset input
-    });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleTranslate = async () => {
@@ -782,9 +780,8 @@ export default function Home() {
                   <div className="text-center space-y-4">
                     <div className="relative inline-flex items-center justify-center">
                       <Loader2 className="w-12 h-12 animate-spin text-blue-500" />
-                      <span className="absolute text-xs font-bold text-blue-600">{ocrProgress}%</span>
                     </div>
-                    <p className="text-zinc-500 text-[15px]">Đang trích xuất chữ Tiếng Trung...</p>
+                    <p className="text-zinc-500 text-[15px]">Đang trích xuất qua Google Vision...</p>
                   </div>
                 ) : (
                   <div className="text-center space-y-4">
