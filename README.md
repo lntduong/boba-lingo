@@ -20,17 +20,30 @@
 ## ✨ Tính năng nổi bật (Features)
 
 *   **📱 Trải nghiệm Ứng dụng gốc (PWA):** Cài đặt trực tiếp lên màn hình chính điện thoại (iOS/Android) mà không cần qua App Store, đem lại trải nghiệm mượt mà như app native.
+    *   *Native App Experience (PWA): Install directly to your home screen (iOS/Android) without an App Store for a seamless native-like feel.*
 *   **📷 Dịch bằng Hình ảnh & Cắt ảnh (OCR):** Tích hợp công nghệ OCR.space API. Chụp ảnh menu/biển hiệu, khoanh vùng chọn chữ chính xác và dịch tự động (Việt - Anh) siêu tốc.
+    *   *Image Translation & Cropping (OCR): Integrated with OCR.space API. Take pictures of menus/signs, crop precisely, and translate instantly.*
 *   **🎤 Dịch bằng Giọng nói (Voice Dictation):** Hỗ trợ nhập liệu rảnh tay thông qua nhận diện giọng nói Tiếng Việt thông minh.
+    *   *Voice Dictation: Supports hands-free input through smart Vietnamese speech recognition.*
 *   **🎙️ Chấm điểm Phát âm (Pronunciation):** Luyện nói tiếng Trung với tính năng chấm điểm phát âm tự động (sử dụng thuật toán Levenshtein).
+    *   *Pronunciation Scoring: Practice speaking Chinese with an automatic scoring system (using Levenshtein algorithm).*
 *   **⚙️ Tuỳ chỉnh Giao diện (Settings):** Hỗ trợ Dark Mode, đổi phông chữ (Serif/Mono/Sans) và phóng to/thu nhỏ cỡ chữ toàn màn hình phù hợp với mọi độ tuổi.
+    *   *UI Customization (Settings): Supports Dark Mode, font changing (Serif/Mono/Sans), and global text scaling for all ages.*
 *   **📴 Chế độ Ngoại tuyến (Offline Mode):** Tự động lưu trữ (cache) dữ liệu vào trình duyệt. Yên tâm tra cứu từ vựng và học thẻ ngay cả khi bạn đang trên máy bay hay dưới ga tàu điện ngầm không có mạng.
+    *   *Offline Mode: Automatically caches data in the browser. Safely look up vocabulary and study flashcards even on airplanes or in subways.*
 *   **📚 Sổ tay Từ vựng (Vocabulary):** Quản lý và phân loại các mẫu câu giao tiếp theo chủ đề (Ví dụ: Sân bay, Mua sắm, Ăn uống).
+    *   *Vocabulary Notebook: Manage and categorize conversational sentences by topics (e.g., Airport, Shopping, Dining).*
 *   **🧠 Chế độ Ôn tập (Flashcards):** Luyện tập trí nhớ với bộ thẻ lật trực quan, có tính năng phát âm và xáo trộn thẻ thông minh.
+    *   *Review Mode (Flashcards): Practice memory with intuitive flip cards, featuring pronunciation and smart shuffling.*
 *   **⭐ Đánh dấu Yêu thích (Bookmarks):** Lưu ngay những câu giao tiếp khẩn cấp để truy cập nhanh chóng.
+    *   *Bookmarks: Instantly save emergency conversational sentences for quick access.*
 *   **📋 Sao chép Nhanh (1-Click Copy):** Dễ dàng copy đoạn tiếng Trung để gửi qua Zalo, Line hoặc đưa cho tài xế taxi đọc.
+    *   *1-Click Copy: Easily copy Chinese phrases to send via messaging apps or show to taxi drivers.*
 *   **🗣 Phát âm Chuẩn (Text-to-Speech):** Tích hợp giọng đọc bản xứ (zh-TW và en-US) giúp bạn luyện nghe và phát âm chuẩn xác.
+    *   *Native Pronunciation (Text-to-Speech): Built-in native voices (zh-TW and en-US) help you practice listening and correct pronunciation.*
 *   **🌍 Dịch thuật Tự động:** Dịch từ tiếng Việt sang tiếng Trung (Phồn thể) kèm phiên âm Pinyin và tiếng Anh.
+    *   *Automatic Translation: Translate from Vietnamese to Traditional Chinese with Pinyin and English included.*
+
 
 ## 🛠 Công nghệ sử dụng (Tech Stack)
 
