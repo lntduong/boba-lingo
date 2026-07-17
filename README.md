@@ -19,20 +19,24 @@
 
 ## ✨ Tính năng nổi bật (Features)
 
+*   **📱 Trải nghiệm Ứng dụng gốc (PWA):** Cài đặt trực tiếp lên màn hình chính điện thoại (iOS/Android) mà không cần qua App Store, đem lại trải nghiệm mượt mà như app native.
+*   **📷 Dịch bằng Hình ảnh & Cắt ảnh (OCR):** Tích hợp công nghệ OCR.space API. Chụp ảnh menu/biển hiệu, khoanh vùng chọn chữ chính xác và dịch tự động (Việt - Anh) siêu tốc.
+*   **🎤 Dịch bằng Giọng nói (Voice Dictation):** Hỗ trợ nhập liệu rảnh tay thông qua nhận diện giọng nói Tiếng Việt thông minh.
+*   **📴 Chế độ Ngoại tuyến (Offline Mode):** Tự động lưu trữ (cache) dữ liệu vào trình duyệt. Yên tâm tra cứu từ vựng và học thẻ ngay cả khi bạn đang trên máy bay hay dưới ga tàu điện ngầm không có mạng.
 *   **📚 Sổ tay Từ vựng (Vocabulary):** Quản lý và phân loại các mẫu câu giao tiếp theo chủ đề (Ví dụ: Sân bay, Mua sắm, Ăn uống).
 *   **🧠 Chế độ Ôn tập (Flashcards):** Luyện tập trí nhớ với bộ thẻ lật trực quan, có tính năng phát âm và xáo trộn thẻ thông minh.
-*   **📴 Chế độ Ngoại tuyến (Offline Mode):** Tự động lưu trữ (cache) dữ liệu vào trình duyệt. Yên tâm tra cứu từ vựng ngay cả khi bạn đang trên máy bay hay dưới ga tàu điện ngầm không có mạng.
 *   **⭐ Đánh dấu Yêu thích (Bookmarks):** Lưu ngay những câu giao tiếp khẩn cấp để truy cập nhanh chóng.
 *   **📋 Sao chép Nhanh (1-Click Copy):** Dễ dàng copy đoạn tiếng Trung để gửi qua Zalo, Line hoặc đưa cho tài xế taxi đọc.
 *   **🗣 Phát âm Chuẩn (Text-to-Speech):** Tích hợp giọng đọc bản xứ (zh-TW và en-US) giúp bạn luyện nghe và phát âm chuẩn xác.
-*   **🌍 Dịch thuật Thông minh:** Tự động dịch từ tiếng Việt sang tiếng Trung (Phồn thể) kèm phiên âm Pinyin và tiếng Anh dự phòng.
+*   **🌍 Dịch thuật Tự động:** Dịch từ tiếng Việt sang tiếng Trung (Phồn thể) kèm phiên âm Pinyin và tiếng Anh.
 
 ## 🛠 Công nghệ sử dụng (Tech Stack)
 
-*   **Framework:** [Next.js](https://nextjs.org/) (App Router)
+*   **Framework:** [Next.js](https://nextjs.org/) (App Router) + PWA
 *   **Ngôn ngữ:** [TypeScript](https://www.typescriptlang.org/)
 *   **Giao diện:** [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), Lucide Icons
-*   **Cơ sở dữ liệu:** Google Sheets (via `google-spreadsheet` package)
+*   **Cơ sở dữ liệu:** Google Sheets API
+*   **Xử lý hình ảnh (OCR):** OCR.space API, `react-image-crop`
 *   **Dịch thuật & Phiên âm:** `translate-google`, `pinyin-pro`
 
 ## 🚀 Hướng dẫn cài đặt (Getting Started)
