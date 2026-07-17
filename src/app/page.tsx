@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera } from 'lucide-react';
+import { Volume2, RefreshCw, Plus, BookOpen, Loader2, ChevronLeft, Folder, Trash2, Search, Mic, PenLine, Languages, Save, Brain, Shuffle, ArrowRight, ArrowLeft, Copy, Star, WifiOff, Camera, X } from 'lucide-react';
+import ReactCrop, { type Crop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 
 interface Sentence {
   id?: string;
@@ -38,6 +40,10 @@ export default function Home() {
   const [scanPreview, setScanPreview] = useState<Sentence | null>(null);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Crop>({ unit: '%', width: 50, height: 50, x: 25, y: 25 });
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
 
   // Review Mode states
   const [reviewSentences, setReviewSentences] = useState<Sentence[]>([]);
@@ -170,54 +176,60 @@ export default function Home() {
     recognition.start();
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCropImageSrc(event.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ''; // reset input
+  };
+
+  const handleCropConfirm = async () => {
+    if (!imgRef.current || !completedCrop || completedCrop.width === 0 || completedCrop.height === 0) {
+      toast.error('Vui lòng chọn vùng ảnh để cắt');
+      return;
+    }
+
     setIsOcrLoading(true);
+    setCropImageSrc(null); // Close crop modal
     toast.info('Đang nén và trích xuất ảnh...', { duration: 3000 });
 
-    const compressImage = (file: File): Promise<string> => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-          const img = new Image();
-          img.src = event.target?.result as string;
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 1200;
-            const MAX_HEIGHT = 1200;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) {
-                height *= MAX_WIDTH / width;
-                width = MAX_WIDTH;
-              }
-            } else {
-              if (height > MAX_HEIGHT) {
-                width *= MAX_HEIGHT / height;
-                height = MAX_HEIGHT;
-              }
-            }
-
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0, width, height);
-            
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-          img.onerror = (err) => reject(err);
-        };
-        reader.onerror = (err) => reject(err);
-      });
-    };
-
     try {
-      const base64String = await compressImage(file);
+      const canvas = document.createElement('canvas');
+      const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+      const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+      
+      // Reduce resolution to max 1200px
+      const MAX_WIDTH = 1200;
+      const cropWidth = completedCrop.width * scaleX;
+      const cropHeight = completedCrop.height * scaleY;
+      let finalWidth = cropWidth;
+      let finalHeight = cropHeight;
+      if (finalWidth > MAX_WIDTH) {
+        finalHeight *= MAX_WIDTH / finalWidth;
+        finalWidth = MAX_WIDTH;
+      }
+
+      canvas.width = finalWidth;
+      canvas.height = finalHeight;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
+      const cropX = completedCrop.x * scaleX;
+      const cropY = completedCrop.y * scaleY;
+
+      ctx.drawImage(
+        imgRef.current,
+        cropX, cropY, cropWidth, cropHeight,
+        0, 0, finalWidth, finalHeight
+      );
+
+      const base64String = canvas.toDataURL('image/jpeg', 0.8);
+
       const ocrRes = await fetch('/api/ocr', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,7 +266,6 @@ export default function Home() {
       toast.error('Lỗi gửi ảnh: ' + err.message);
     } finally {
       setIsOcrLoading(false);
-      e.target.value = ''; // reset input
     }
   };
 
@@ -794,11 +805,39 @@ export default function Home() {
             )}
           </div>
         )}
-
         {tab === 'scan' && (
-          <div className="space-y-4 mt-2">
+          <div className="space-y-6">
             <h1 className="text-xl sm:text-2xl font-bold text-zinc-800 dark:text-zinc-100 px-1">Máy Quét Menu</h1>
             
+            {cropImageSrc && (
+              <div className="fixed inset-0 z-50 flex flex-col bg-black">
+                <div className="p-4 flex items-center justify-between bg-zinc-900 text-white">
+                  <button onClick={() => setCropImageSrc(null)} className="p-2 rounded-full bg-zinc-800">
+                    <X className="w-5 h-5" />
+                  </button>
+                  <span className="font-medium">Cắt chữ cần quét</span>
+                  <button onClick={handleCropConfirm} className="px-4 py-2 bg-blue-600 rounded-full font-medium text-sm text-white">
+                    Quét
+                  </button>
+                </div>
+                <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(c) => setCrop(c)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    className="max-h-full"
+                  >
+                    <img 
+                      ref={imgRef}
+                      src={cropImageSrc} 
+                      className="max-w-full max-h-[80vh] object-contain"
+                      alt="Crop target" 
+                    />
+                  </ReactCrop>
+                </div>
+              </div>
+            )}
+
             <Card className="border-none shadow-sm rounded-2xl bg-white dark:bg-zinc-900 overflow-hidden">
               <div className="p-8 flex flex-col items-center justify-center min-h-[250px] relative bg-zinc-50 dark:bg-zinc-950/50">
                 <input 
