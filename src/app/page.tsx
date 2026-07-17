@@ -170,58 +170,92 @@ export default function Home() {
     recognition.start();
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsOcrLoading(true);
-    setOcrProgress(0);
-    toast.info('Đang gửi ảnh lên hệ thống Google Vision...', { duration: 3000 });
+    toast.info('Đang nén và gửi ảnh lên hệ thống Google Vision...', { duration: 3000 });
 
-    const reader = new FileReader();
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
-      try {
-        const ocrRes = await fetch('/api/ocr', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image: base64String }),
-        });
-        
-        const ocrData = await ocrRes.json();
-        if (ocrRes.ok && ocrData.text) {
-          const recognized = ocrData.text.trim();
-          if (recognized) {
-            setScanText(recognized);
-            toast.success('Đã đọc được văn bản, đang dịch...');
-            
-            setIsTranslating(true);
-            const transRes = await fetch('/api/translate', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ text: recognized }),
-            });
-            const transData = await transRes.json();
-            if (transRes.ok) {
-              setScanPreview(transData);
+    const compressImage = (file: File): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+          const img = new Image();
+          img.src = event.target?.result as string;
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+              }
             } else {
-              toast.error('Lỗi dịch: ' + transData.error);
+              if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+              }
             }
-            setIsTranslating(false);
-          } else {
-            toast.error('Không tìm thấy chữ trong ảnh');
-          }
-        } else {
-          toast.error('Lỗi nhận diện ảnh: ' + (ocrData.error || 'Không tìm thấy chữ'));
-        }
-      } catch (err: any) {
-        toast.error('Lỗi gửi ảnh: ' + err.message);
-      } finally {
-        setIsOcrLoading(false);
-        e.target.value = ''; // reset input
-      }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+      });
     };
-    reader.readAsDataURL(file);
+
+    try {
+      const base64String = await compressImage(file);
+      const ocrRes = await fetch('/api/ocr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: base64String }),
+      });
+      
+      const ocrData = await ocrRes.json();
+      if (ocrRes.ok && ocrData.text) {
+        const recognized = ocrData.text.trim();
+        if (recognized) {
+          setScanText(recognized);
+          toast.success('Đã đọc được văn bản, đang dịch...');
+          
+          setIsTranslating(true);
+          const transRes = await fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: recognized }),
+          });
+          const transData = await transRes.json();
+          if (transRes.ok) {
+            setScanPreview(transData);
+          } else {
+            toast.error('Lỗi dịch: ' + transData.error);
+          }
+          setIsTranslating(false);
+        } else {
+          toast.error('Không tìm thấy chữ trong ảnh');
+        }
+      } else {
+        toast.error('Lỗi nhận diện ảnh: ' + (ocrData.error || 'Không tìm thấy chữ'));
+      }
+    } catch (err: any) {
+      toast.error('Lỗi gửi ảnh: ' + err.message);
+    } finally {
+      setIsOcrLoading(false);
+      e.target.value = ''; // reset input
+    }
   };
 
   const handleTranslate = async () => {
